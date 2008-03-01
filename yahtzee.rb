@@ -39,13 +39,19 @@ class YahtzeeGame
     @dice.map {|d| d.num}
   end
 
-  def is_over
-    @players.any? {|p| p.is_finished}
+  def over?
+    @players.any? {|p| p.finished?}
   end
 end
 
+key_move_mappings = {"1" => :ones, "2" => :twos, "3" => :threes,
+    "4" => :fours, "5" => :fives, "6" => :sixes,
+    "s" => :small_straight, "l" => :large_straight,
+    "t" => :three_of_a_kind, "f" => :four_of_a_kind,
+    "h" => :full_house, "y" => :yahtzee, "?" => :chance};
+
 game = YahtzeeGame.new
-until (game.is_over)
+until (game.over?)
   puts "Player #{game.curr_player_no}'s turn"
   player = game.curr_player
   player.start_turn
@@ -61,7 +67,8 @@ until (game.is_over)
   player.refine(reroll_dice)
   puts "Your final roll is #{game.dice.join(', ')}.\nEnter your move - one of: 123456tfslh?y"
   score = -1
-  score = player.score($stdin.gets.strip) until (score != -1)
+  score = player.score(key_move_mappings[$stdin.gets.strip]) until (score != -1)
+  puts "You scored #{score} in that move"
   player.print_board
 end
-puts "The winner is player #{game.curr_player_no} with a score of #{score}"
+puts "The winner is player #{game.curr_player_no} with a score of #{player.total_score}"

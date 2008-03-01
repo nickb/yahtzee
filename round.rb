@@ -1,126 +1,20 @@
+require 'move.rb'
+
 class Round
-  def ones=(dice)
-    if (@ones.nil?)
-      @ones = dice.reject{|d| d != 1}.inject(0) {|sum, val| sum + val}
-    end
-  end
+  @@upper_moves = [:ones, :twos, :threes, :fours, :fives, :sixes]
+  @@lower_moves = [:full_house, :small_straight, :large_straight, :three_of_a_kind, :four_of_a_kind, :yahtzee, :chance]
 
-  def twos=(dice)
-    if (@twos.nil?)
-      @twos = dice.reject{|d| d != 2}.inject(0) {|sum, val| sum + val}
-    end
-  end
-
-  def threes=(dice)
-    if (@threes.nil?)
-      @threes = dice.reject{|d| d != 3}.inject(0) {|sum, val| sum + val}
-    end
-  end
-
-  def fours=(dice)
-    if (@fours.nil?)
-      @fours = dice.reject{|d| d != 4}.inject(0) {|sum, val| sum + val}
-    end
-  end
-
-  def fives=(dice)
-    if (@fives.nil?)
-      @fives = dice.reject{|d| d != 5}.inject(0) {|sum, val| sum + val}
-    end
-  end
-
-  def sixes=(dice)
-    if (@sixes.nil?)
-      @sixes = dice.reject{|d| d != 6}.inject(0) {|sum, val| sum + val}
-    end
-  end
-
-  def full_house=(dice)
-    if (@full_house.nil?)
-      dice.sort!
-      if (dice.uniq.length == 2 && (dice[0] == dice[1]) && (dice[-1] == dice[-2]))
-        @full_house = 25
-      else
-        @full_house = 0
-      end
-    end
-  end
-
-  def small_straight=(dice)
-    if (@small_straight.nil?)
-      sorted_dice = dice.uniq.sort
-      if (sorted_dice[0..3] == [1, 2, 3, 4] || sorted_dice[0..3] == [2, 3, 4, 5] || sorted_dice[1..4]== [3, 4, 5, 6])
-        @small_straight = 40
-      else
-        @small_straight = 0
-      end
-    end
-  end
-
-  def large_straight=(dice)
-    if (@large_straight.nil?)
-      dice.sort!
-      if (dice == [1, 2, 3, 4, 5] || dice == [2, 3, 4, 5, 6])
-        @large_straight = 40
-      else
-        @large_straight = 0
-      end
-    end
-  end
-
-  def three_of_a_kind=(dice)
-    if (@three_of_a_kind.nil?)
-      dice.sort!
-      if (dice.reject{|d| d != dice[2]}.length >= 3)
-        @three_of_a_kind = dice.inject() {|sum, val| sum + val}
-      else
-        @full_house = 0
-      end
-    end
-  end
-
-  def four_of_a_kind=(dice)
-    if (@four_of_a_kind.nil?)
-      dice.sort!
-      if (dice.reject{|d| d != dice[2]}.length >= 4)
-        @four_of_a_kind = dice.inject() {|sum, val| sum + val}
-      else
-        @four_of_a_kind = 0
-      end
-    end
-  end
-
-  #fixme (can score yahtzees >1)
-  def yahtzee=(dice)
-    if (@yahtzee.nil?)
-      num = dice[0];
-      if (dice == Array.new(5, num))
-        @yahtzee = 50
-      else
-        @yahtzee = 0
-      end
-    end
-  end
-
-  def chance=(dice)
-    if (@chance.nil?)
-      @chance = dice.inject() {|sum, val| sum + val}
-    end
-  end
-
-  def upper_bonus
-    upper_total_raw > 63 ? 35 : 0
+  def initialize()
+    @moves = Hash.new
+    Array.new(@@upper_moves).concat(@@lower_moves).each {|m| @moves[m] = Move.new(m)}
   end
 
   def upper_total_raw
-    total = 0
-    total += @ones if @ones
-    total += @twos if @twos
-    total += @threes if @threes
-    total += @fours if @fours
-    total += @fives if @fives
-    total += @sixes if @sixes
-    total
+    subtotal(@@upper_moves)
+  end
+
+  def upper_bonus
+    upper_total_raw >= 63 ? 35 : 0
   end
 
   def upper_total
@@ -128,23 +22,49 @@ class Round
   end
 
   def lower_total
-    total = 0
-    total += @full_house if (@full_house)
-    total += @three_of_a_kind if (@three_of_a_kind)
-    total += @four_of_a_kind if (@four_of_a_kind)
-    total += @small_straight if (@small_straight)
-    total += @large_straight if (@large_straight)
-    total += @chance if (@chance)
-    total += @yahtzee if (@yahtzee)
-    total
+    subtotal(@@lower_moves)
   end
 
-  def score
+  def grand_total
     lower_total + upper_total
   end
 
-  def is_complete
-    @ones && @twos && @threes && @fours && @fives && @sixes && @full_house && @three_of_a_kind && @four_of_a_kind && @small_straight && @large_straight && @chance && @yahtzee
+  def score(move)
+    raise "No such move \"${move}\"" if @moves[move].nil?
+    @moves[move].score
   end
-  attr_reader :ones, :twos, :threes, :fours, :fives, :sixes, :three_of_a_kind, :four_of_a_kind, :full_house, :small_straight, :large_straight, :chance, :yahtzee
+
+  def make_move(move, dice)
+    raise "Illegal move \"${move}\"" if @moves[move].nil?
+    @moves[move].make(dice)
+  end
+
+  def complete?
+    !@moves.any? {|name, move| move.score.nil?}
+  end
+
+  def print
+    puts "1s\t\t#{score(:ones)}"
+    puts "2s\t\t#{score(:twos)}"
+    puts "3s\t\t#{score(:threes)}"
+    puts "4s\t\t#{score(:fours)}"
+    puts "5s\t\t#{score(:fives)}"
+    puts "6s\t\t#{score(:sixes)}"
+    puts "bonus\t\t#{upper_bonus}"
+    puts "upper total\t#{upper_total}"
+    puts "3 of a kind\t#{score(:three_of_a_kind)}"
+    puts "4 of a kind\t#{score(:four_of_a_kind)}"
+    puts "full house\t#{score(:full_house)}"
+    puts "small_straight\t#{score(:small_straight)}"
+    puts "large_straight\t#{score(:large_straight)}"
+    puts "yahtzee\t\t#{score(:yahtzee)}"
+    puts "chance\t\t#{score(:chance)}"
+    puts "lower total\t#{lower_total}"
+    puts "grand total\t#{grand_total}"
+  end
+
+  private
+  def subtotal(move_set)
+    @moves.select {|name, move| move_set.include?(name)}.map {|name, move| move.score}.inject(0){|total, val| total + (val.nil? ? 0 : val)}
+  end
 end
