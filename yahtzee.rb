@@ -6,7 +6,7 @@ require 'round.rb'
 
 class YahtzeeGame
   def initialize(players = 1)
-    @dice = [Die.new, Die.new, Die.new, Die.new, Die.new]
+    @dice = Array.new(5) {Die.new}
     @no_of_players = players
     @curr_player_no = 0
     @players = Array.new(@no_of_players) { Player.new(self) }
