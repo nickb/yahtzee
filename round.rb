@@ -85,7 +85,7 @@ class Round
       if (dice.reject{|d| d != dice[2]}.length >= 4)
         @four_of_a_kind = dice.inject() {|sum, val| sum + val}
       else
-        @full_house = 0
+        @four_of_a_kind = 0
       end
     end
   end
@@ -143,5 +143,8 @@ class Round
     lower_total + upper_total
   end
 
+  def is_complete
+    @ones && @twos && @threes && @fours && @fives && @sixes && @full_house && @three_of_a_kind && @four_of_a_kind && @small_straight && @large_straight && @chance && @yahtzee
+  end
   attr_reader :ones, :twos, :threes, :fours, :fives, :sixes, :three_of_a_kind, :four_of_a_kind, :full_house, :small_straight, :large_straight, :chance, :yahtzee
 end

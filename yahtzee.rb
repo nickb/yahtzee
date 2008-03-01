@@ -31,14 +31,22 @@ class YahtzeeGame
     @players[@curr_player_no]
   end
 
-  #attr_reader :dice
+  def curr_player_no
+    @curr_player_no + 1
+  end
+
   def dice
     @dice.map {|d| d.num}
+  end
+
+  def is_over
+    @players.any? {|p| p.is_finished}
   end
 end
 
 game = YahtzeeGame.new
-while (true)
+until (game.is_over)
+  puts "Player #{game.curr_player_no}'s turn"
   player = game.curr_player
   player.start_turn
   puts "Your first roll is #{game.dice.join(', ')}.\nEnter the numbers of the dice you want to reroll (e.g. \"12345\" for all dice)"
@@ -56,3 +64,4 @@ while (true)
   score = player.score($stdin.gets.strip) until (score != -1)
   player.print_board
 end
+puts "The winner is player #{game.curr_player_no} with a score of #{score}"

@@ -51,4 +51,8 @@ class Player
     puts "lower total\t#{@round.lower_total}"
     puts "grand total\t#{@round.score}"
   end
+
+  def is_finished
+    @round.is_complete
+  end
 end
